@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TI · Trajectoire Idéale</title>
+<style>
+  :root {
+    --bg: #0b0b0e; --panel: #14141a; --panel2: #1b1b23; --line: #272733;
+    --text: #f4f4f6; --dim: #9a9aab; --red: #ef4444; --green: #22c55e; --amber: #f59e0b; --blue: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 18px 28px; border-bottom: 1px solid var(--line);
+           border-top: 6px solid var(--red); }
+  .badge { font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 2px; background: var(--red);
+           padding: 0 14px; border-radius: 9px; }
+  .brand { color: var(--dim); letter-spacing: 6px; font-size: 12px; }
+  .spacer { flex: 1; }
+  .chip { padding: 6px 14px; border-radius: 999px; font-weight: 800; font-style: italic; letter-spacing: 1px; font-size: 13px;
+          background: var(--panel2); color: var(--dim); }
+  .chip.on { background: var(--green); color: #04130a; }
+  .chip.off { background: var(--red); color: #fff; }
+  .chip.break { background: var(--blue); color: #04121a; }
+  .clock { font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; }
+  main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; padding: 24px 28px; max-width: 1200px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  h2 { margin: 0 0 14px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--dim); }
+  .wide { grid-column: 1 / -1; }
+  .banner { background: #2a1d05; border: 1px solid #5b4310; color: #fcd34d; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; }
+
+  .ribbon { position: relative; height: 46px; background: var(--panel2); border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
+  .seg { position: absolute; top: 0; bottom: 0; opacity: .9; border-right: 2px solid var(--panel); font-size: 12px; font-weight: 700;
+         padding: 6px 8px; overflow: hidden; white-space: nowrap; color: #05060a; }
+  .seg.focus { background: var(--green); } .seg.free { background: #a1a1b5; } .seg.break { background: var(--blue); }
+  .nowmark { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .ticks { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; margin-bottom: 16px; }
+
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--panel2);
+         margin-bottom: 8px; border-left: 6px solid #a1a1b5; }
+  .row.focus { border-left-color: var(--green); } .row.break { border-left-color: var(--blue); }
+  .row.now { outline: 2px solid var(--red); }
+  .row .time { font-variant-numeric: tabular-nums; color: var(--dim); min-width: 108px; }
+  .row .title { flex: 1; font-weight: 700; }
+  .tag { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); }
+  .empty { color: var(--dim); padding: 10px 2px; }
+
+  form.add { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+  form.add .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; }
+  input, select, textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+                            padding: 9px 10px; font: inherit; }
+  textarea { font-family: ui-monospace, monospace; font-size: 13px; min-height: 130px; resize: vertical; }
+  button { cursor: pointer; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 800; color: #04130a; background: var(--green); }
+  button.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+  button.del { background: transparent; color: var(--dim); padding: 4px 8px; font-size: 18px; }
+  button.del:hover { color: var(--red); }
+  .err { color: #fca5a5; min-height: 20px; margin-top: 8px; font-size: 13px; }
+  .ok { color: #86efac; }
+  .hint { color: var(--dim); font-size: 13px; margin: 0 0 12px; }
+
+  .bar { height: 10px; background: var(--panel2); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; background: var(--green); }
+  .bar.bad > i { background: var(--red); } .bar.mid > i { background: var(--amber); }
+  .score { margin-bottom: 14px; }
+  .score b { font-size: 18px; }
+  .active { background: var(--panel2); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
+  .active code { color: var(--green); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">TI</div>
+  <div class="brand">TRAJECTOIRE IDÉALE</div>
+  <div class="spacer"></div>
+  <div id="chip" class="chip">…</div>
+  <div id="clock" class="clock">--:--</div>
+</header>
+
+<main>
+  <section class="wide" id="notices" style="display:none"></section>
+
+  <section>
+    <h2>Today's line</h2>
+    <div class="ribbon" id="ribbon"></div>
+    <div class="ticks"><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span></div>
+    <div id="blocks"></div>
+
+    <h2 style="margin-top:22px">Add a stretch</h2>
+    <form class="add" id="addForm">
+      <div><label>Start</label><input type="time" id="fStart" required></div>
+      <div><label>End</label><input type="time" id="fEnd" required></div>
+      <div><label>Type</label>
+        <select id="fType"><option value="focus">Focus</option><option value="free">Free</option><option value="break">Break</option></select></div>
+      <div class="full"><label>What is it?</label><input id="fTitle" maxlength="80" placeholder="e.g. Study: algorithms" required></div>
+      <div class="full"><button type="submit">Add to the line</button>
+        <button type="button" class="ghost" id="clearBtn">Clear the day</button></div>
+    </form>
+    <div class="err" id="addErr"></div>
+  </section>
+
+  <div style="display:grid; gap:20px; align-content:start">
+    <section>
+      <h2>How you're doing</h2>
+      <div id="score"></div>
+    </section>
+
+    <section>
+      <h2>Guardrails (focus blocks)</h2>
+      <p class="hint">One pattern per line. Free and break blocks are never enforced.</p>
+      <div class="active" id="activeBox"></div>
+      <div class="cols">
+        <div><label>Allowed apps</label><textarea id="rAllow" spellcheck="false"></textarea></div>
+        <div><label>Blocked words (app or window title)</label><textarea id="rDeny" spellcheck="false"></textarea></div>
+      </div>
+      <div class="actions">
+        <button id="saveRules">Save guardrails</button>
+        <button class="ghost" id="resetRules">Reset to defaults</button>
+      </div>
+      <div class="err" id="rulesMsg"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+// Build DOM with textContent only: window titles and block names are untrusted.
+const h = (tag, props = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on')) e[k] = v;
+    else e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) e.append(c);
+  return e;
+};
+async function api(path, body) {
+  const opts = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-TI': '1' }, body: JSON.stringify(body) };
+  const r = await fetch(path, opts);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+const mins = t => { const [a, b] = t.split(':').map(Number); return a * 60 + b; };
+const TYPE = { focus: 'Focus', free: 'Free', break: 'Break' };
+let rulesLoaded = false, lastOverview = null;
+
+function renderChip(o) {
+  const c = $('#chip'); c.className = 'chip';
+  if (!o.watcher) { c.textContent = 'WATCHER OFFLINE'; return; }
+  const cur = o.current, st = o.live && o.live.state;
+  if (!cur) c.textContent = 'NO BLOCK';
+  else if (st === 'off') { c.className = 'chip off'; c.textContent = 'OFF THE LINE · ' + (o.live.app || ''); }
+  else if (cur.type === 'focus') { c.className = 'chip on'; c.textContent = 'ON THE LINE'; }
+  else if (cur.type === 'break') { c.className = 'chip break'; c.textContent = 'BREAK'; }
+  else c.textContent = 'FREE TIME';
+}
+
+function renderPlan(o) {
+  const START = 360, SPAN = 1080; // 06:00 .. 24:00
+  const ribbon = $('#ribbon'); ribbon.replaceChildren();
+  for (const b of o.plan) {
+    const s = Math.max(mins(b.start), START), e = Math.min(mins(b.end), START + SPAN);
+    if (e <= s) continue;
+    ribbon.append(h('div', { class: 'seg ' + b.type, title: `${b.start}-${b.end} ${b.title}`,
+      style: `left:${(s - START) / SPAN * 100}%;width:${(e - s) / SPAN * 100}%` }, b.title));
+  }
+  const n = mins(o.now);
+  if (n >= START && n <= START + SPAN) ribbon.append(h('div', { class: 'nowmark', style: `left:${(n - START) / SPAN * 100}%` }));
+
+  const list = $('#blocks'); list.replaceChildren();
+  if (!o.plan.length) list.append(h('div', { class: 'empty' }, 'Nothing planned. Add your first stretch below.'));
+  for (const b of o.plan) {
+    const isNow = o.current && o.current.start === b.start;
+    list.append(h('div', { class: `row ${b.type}${isNow ? ' now' : ''}` },
+      h('div', { class: 'time' }, `${b.start} – ${b.end}`),
+      h('div', { class: 'title' }, b.title),
+      h('div', { class: 'tag' }, isNow ? 'NOW · ' + TYPE[b.type] : TYPE[b.type]),
+      h('button', { class: 'del', title: 'Remove', onclick: async () => { await api('/api/remove', { start: b.start }); refresh(); } }, '×')));
+  }
+}
+
+function renderScore(o) {
+  const box = $('#score'); box.replaceChildren();
+  if (!o.score.length) { box.append(h('div', { class: 'empty' }, 'No focus time logged yet today. Keep the watcher running.')); return; }
+  for (const r of o.score) {
+    const cls = r.on_line_pct >= 80 ? '' : r.on_line_pct >= 50 ? 'mid' : 'bad';
+    box.append(h('div', { class: 'score' },
+      h('div', {}, h('b', {}, r.on_line_pct + '%'), ` on the line · ${r.block} ${r.title}`),
+      h('div', { class: 'bar ' + cls }, h('i', { style: `width:${r.on_line_pct}%` }))));
+  }
+}
+
+function renderActive(o) {
+  const box = $('#activeBox'); box.replaceChildren();
+  const a = o.active;
+  if (!a || !a.app) { box.append('No window data yet.'); return; }
+  box.append('Focused now: ', h('code', {}, a.app), ' ',
+    h('button', { class: 'ghost', style: 'padding:3px 10px;font-size:12px', onclick: () => addAllowed(a.app) }, 'Allow this app'));
+}
+function addAllowed(app) {
+  const ta = $('#rAllow'), esc = app.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!lines.includes(esc)) lines.push(esc);
+  ta.value = lines.join('\n');
+  $('#rulesMsg').textContent = 'Added. Press "Save guardrails" to apply.'; $('#rulesMsg').className = 'err ok';
+}
+function loadRules(o) {
+  const f = (o.rules && o.rules.focus) || { allow: [], deny: [] };
+  $('#rAllow').value = (f.allow || []).join('\n');
+  $('#rDeny').value = (f.deny || []).join('\n');
+}
+
+function renderNotices(o) {
+  const box = $('#notices'); box.replaceChildren();
+  const msgs = [];
+  if (!o.watcher) msgs.push('The watcher is not running, so nothing is being tracked. Start TI with ./ti.py ui (or ./ti.py watch).');
+  if (!o.active) msgs.push('No window data: the TI GNOME extension isn\'t running, so drift can\'t be detected. Enable it with: gnome-extensions enable ti-active-window@ti.local');
+  box.style.display = msgs.length ? '' : 'none';
+  for (const m of msgs) box.append(h('div', { class: 'banner' }, m));
+}
+
+function render(o) {
+  $('#clock').textContent = o.now;
+  renderChip(o); renderNotices(o); renderPlan(o); renderScore(o); renderActive(o);
+  if (!rulesLoaded) { loadRules(o); rulesLoaded = true; }
+}
+async function refresh() {
+  try { lastOverview = await api('/api/overview'); render(lastOverview); }
+  catch (e) { $('#chip').className = 'chip'; $('#chip').textContent = 'TI SERVER UNREACHABLE'; }
+}
+
+$('#addForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const err = $('#addErr'); err.textContent = '';
+  try {
+    await api('/api/add', { start: $('#fStart').value, end: $('#fEnd').value, type: $('#fType').value, title: $('#fTitle').value });
+    $('#fTitle').value = '';
+    // Chain the next block: start where this one ended.
+    $('#fStart').value = $('#fEnd').value; $('#fEnd').value = '';
+    refresh();
+  } catch (e) { err.textContent = e.message; }
+});
+$('#clearBtn').onclick = async () => { if (confirm('Remove every block from today?')) { await api('/api/clear', {}); refresh(); } };
+$('#saveRules').onclick = async () => {
+  const lines = id => $(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+  const msg = $('#rulesMsg');
+  try {
+    const rules = { ...(lastOverview ? lastOverview.rules : {}), focus: { allow: lines('#rAllow'), deny: lines('#rDeny') } };
+    await api('/api/rules', rules);
+    msg.textContent = 'Saved. Takes effect within a few seconds.'; msg.className = 'err ok';
+  } catch (e) { msg.textContent = e.message; msg.className = 'err'; }
+};
+$('#resetRules').onclick = async () => {
+  if (!confirm('Replace your guardrails with the defaults?')) return;
+  await api('/api/rules/reset', {});
+  const o = await api('/api/overview'); lastOverview = o; loadRules(o);
+  $('#rulesMsg').textContent = 'Back to defaults.'; $('#rulesMsg').className = 'err ok';
+};
+
+refresh(); setInterval(refresh, 2000);
+</script>
+</body>
+</html>

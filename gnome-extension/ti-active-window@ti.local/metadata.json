@@ -1,0 +1,7 @@
+{
+  "uuid": "ti-active-window@ti.local",
+  "name": "TI Active Window",
+  "description": "Writes the focused window (app + title) to $XDG_RUNTIME_DIR/ti/active.json for TI.",
+  "shell-version": ["50"],
+  "version": 1
+}
